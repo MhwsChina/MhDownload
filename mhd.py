@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001c',0
+jd,lk,ver,yxz={},th.Lock(),'v0.001d',0
 hd={
     'User-Agent': f'Mhdl/{ver[1:]}',
     'Accept-Encoding': 'br'
@@ -113,7 +113,7 @@ def dl_normal(fn):#不支持断点续传时调用该函数
             rs1=req.get(url,headers=hd,verify=False,stream=True,timeout=timeout)
             with open(p,'wb') as f:
                 for c in rs1.iter_content(chunk_size=chunks):
-                    f.write(c);print(1);jd[p][1]=f.tell()-1
+                    f.write(c);jd[p][1]=f.tell()-1
             break
         except req.exceptions.StreamConsumedError:
             rs1=req.get(url,headers=hd,verify=False,timeout=timeout)
