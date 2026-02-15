@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001b',0
+jd,lk,ver,yxz={},th.Lock(),'v0.001c',0
 hd={
     'User-Agent': f'Mhdl/{ver[1:]}',
     'Accept-Encoding': 'br'
@@ -88,16 +88,15 @@ def dl(fn,s,e):
             jd[p][0]=z1;rs1=req.get(url,headers={**hd, 'Range': f'bytes={s+s1}-{e}'},verify=False,stream=True,timeout=timeout)
             for c in rs1.iter_content(chunk_size=chunks):
                 if c:f.write(c);jd[p][1]=f.tell()
-                lk.acquire();lk.release()#等待帮助线程开始
                 if jd[p][4] and jd[p][1]>=jd[p][4]:#达到帮助大小结束下载
-                    f.truncate(jd[p][4]+1);jd[p][1]=f.tell();f.close();break
+                    f.truncate(jd[p][4]+1);f.close();break
             if jd[p][1]>z1:f.truncate(z1);f.close()#达到该线程需要下载的总量，即(下载终点-下载起点+1)，结束下载
             break
         except Exception as ex:f.close();print(ex,start='\r',mode='ERROR')#输出下载错误内容
     #帮助其他线程下载
     for f,v in list(jd.items()):
         lk.acquire()
-        if v[4] or v[0]<=0 or v[1]>v[0] or v[1]/v[0]>=0.94 or f in jd[p][5]:lk.release();continue
+        if v[4] or v[0]<=0 or v[1]>v[0] or v[1]/v[0]>=0.92 or f in jd[p][5]:lk.release();continue
         z,n,sb,eb=v[0:4];bc=(z-n)//2
         if bc<=chunks*2:lk.release();continue
         jd[f][4],ns=n+bc,sb+n+bc+1;jd[f][5].append(p)
