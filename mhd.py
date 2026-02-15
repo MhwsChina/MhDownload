@@ -56,7 +56,8 @@ def prog(cd=40,n='#',n1='.'):#显示进度
         os.remove(f)#移除分片文件
     fs1=f_a.tell()
     f_a.close()
-    print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',fs==fs1,start='\n');input('下载完毕!\n按Enter退出程序...')
+    print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',fs==fs1,start='\n')
+    input('下载完毕!\n\n按Enter退出程序...')
 def dl(fn,s,e):
     global jd
     p=os.path.join(saveto,"mhdltmp",f'{s}{e}{fn}')#分片下载临时文件
@@ -114,7 +115,7 @@ def inputf(txt,typ=str,ls=[],ifn=None,err='输入错误'):
         tmpa=input(txt)
         if tmpa.replace(' ','')=='':
             if ifn!=None:return ifn
-            else:print(err);continue
+            else:print(err,mode='ERROR');continue
         try:
             tmpa=typ(tmpa)
             if ls and not tmpa in ls:raise RuntimeError
@@ -156,8 +157,8 @@ save1=urllib.parse.unquote(save1)#解码文件名，比如有些时候文件名�
 print('自动识别文件名:',save1)
 print('自动识别文件大小',fmbt(fs),f'({fs}字节)')
 save=inputf(f'FILE /保存文件名 (默认为{save1 if save1 else "无"})-',ifn=(save1 if save1 else None))
-try:saveto=sys.argv[3]
-except:saveto=getjs(("saveto",""));saveto=inputf(f'FOLDER /保存文件夹 (默认为{saveto if saveto else "程序所在文件夹"})-',ifn='').replace('"','')
+try:saveto=sys.argv[2]
+except:saveto=getjs(("saveto",""));saveto=inputf(f'FOLDER /保存文件夹 (默认为{saveto if saveto else "程序所在文件夹"})-',ifn=saveto).replace('"','')
 thd,chunks,threads,ab=inputf(f'THREAD /线程数 (默认为{getjs(("thread",32))})-',int,ifn=getjs("thread")),getjs(("chks",128))*1024,[],1
 lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
