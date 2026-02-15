@@ -15,9 +15,9 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver={},th.Lock(),'b0.001'
+jd,lk,ver,yxz={},th.Lock(),'v0.001b',0
 hd={
-    'User-Agent': f'Mhdl/{ver.replace("b","").replace("v","")}',
+    'User-Agent': f'Mhdl/{ver[1:]}',
     'Accept-Encoding': 'br'
     }#自定义请求头
 def fmbt(num):
@@ -27,6 +27,14 @@ def fmbt(num):
     while c[-1]=='0':c=c[0:-1]
     if c[-1]=='.':c=c[0:-1]
     return c+d
+def fmtime(sec):
+    if sec<=0:return '0秒'
+    h,m,s=0,0,0
+    while sec:
+        if sec>=3600:h+=1;sec-=3600;continue
+        if sec>=60:m+=1;sec-=60;continue
+        s+=int(sec);break
+    return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+(str(s)+"秒" if s else "")
 def sum1(ls,ia=lambda a:a):#列表求和，用于计算进度
     t=0
     for i in ls:t+=ia(i)
@@ -34,20 +42,23 @@ def sum1(ls,ia=lambda a:a):#列表求和，用于计算进度
 #分片计算，如把1024字节的文件分成8份下载就是qp(1024,8)
 def qp(a,b):
     l=[[int(a*i/b)+1,int(a*(i+1)/b)] for i in range(b)]
-    l[0][0]=0
+    l[0][0],l[-1][-1]=0,a-1
     return l
 def prog(cd=40,n='#',n1='.'):#显示进度
-    global jd,ab
+    global jd,ab,yxz
     savtmp,oldt,oldtm=os.path.join(saveto,'mhdltmp'),0,time()
-    sttm=oldtm
+    sttm,sp1=oldtm,0
     while ab:
         sleep(0.2)#停顿一下不然一直计算进度占用cpu很大
         if ab==2:ab=0
         if fs and jd:#检测文件总大小是否大于0才输出进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
-            jd1,sp,sp1=t/fs,fmbt((t-oldt)/(tm-oldtm)),fmbt(t/(tm-sttm))
+            jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
+            if int(tm-sttm)%5==0:sp1=(t-yxz)/(tm-sttm)#每5秒计算一次平均速度
             t1,oldt,oldtm=int(jd1*cd),t,tm
-            print(f'[{t1*n}{(cd-t1)*n1}]%.2f%% {sp}/s 平均{sp1}/s     '%(jd1*100),end='',start='\r',mode='PROGRESS')
+            if sp1:syt=fmtime((fs-t)/int(sp1))
+            else:syt='--秒'
+            print(f'[{t1*n}{(cd-t1)*n1}]%.2f%% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s      '%(jd1*100),end='',start='\r',mode='PROGRESS')
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
@@ -59,7 +70,7 @@ def prog(cd=40,n='#',n1='.'):#显示进度
     print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',fs==fs1,start='\n')
     input('下载完毕!\n\n按Enter退出程序...')
 def dl(fn,s,e):
-    global jd
+    global jd,yxz
     p=os.path.join(saveto,"mhdltmp",f'{s}{e}{fn}')#分片下载临时文件
     jd[p]=[0,0,s,e,0,[]]#进度，格式为[分片的大小,已下载大小,下载起点,下载终点,帮助大小,帮助过自己的线程]
     '''如果某线程下载完了，会帮助其他线程下载。
@@ -69,8 +80,8 @@ def dl(fn,s,e):
         try:
             if os.path.exists(p):#若下载过了但没下完
                 f=open(p,'ab')
-                s1=f.tell()
-                jd[p][1]=s1#计算新的下载起点
+                s1=f.tell();jd[p][1]=s1#计算新的下载起点
+                if not jd[p][0]:yxz+=s1
             else:s1,f=0,open(p,'wb')#没下载过
             z1=e-s+1
             if e-s-s1<=0:f.truncate(z1);f.close();break#若下载过了，下完了，结束下载
@@ -103,7 +114,7 @@ def dl_normal(fn):#不支持断点续传时调用该函数
             rs1=req.get(url,headers=hd,verify=False,stream=True,timeout=timeout)
             with open(p,'wb') as f:
                 for c in rs1.iter_content(chunk_size=chunks):
-                    f.write(c);jd[p][1]=f.tell()-1
+                    f.write(c);print(1);jd[p][1]=f.tell()-1
             break
         except req.exceptions.StreamConsumedError:
             rs1=req.get(url,headers=hd,verify=False,timeout=timeout)
@@ -159,13 +170,12 @@ print('自动识别文件大小',fmbt(fs),f'({fs}字节)')
 save=inputf(f'FILE /保存文件名 (默认为{save1 if save1 else "无"})-',ifn=(save1 if save1 else None))
 try:saveto=sys.argv[2]
 except:saveto=getjs(("saveto",""));saveto=inputf(f'FOLDER /保存文件夹 (默认为{saveto if saveto else "程序所在文件夹"})-',ifn=saveto).replace('"','')
-thd,chunks,threads,ab=inputf(f'THREAD /线程数 (默认为{getjs(("thread",32))})-',int,ifn=getjs("thread")),getjs(("chks",128))*1024,[],1
+thd,chunks,threads,ab=inputf(f'THREAD /线程数 (默认为{getjs(("thread",32))})-',int,ifn=getjs("thread")),131072,[],1
 lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
 try:os.makedirs(os.path.join(saveto,'mhdltmp'))#创建临时文件夹
 except:pass
 setjs(('timeout',timeout),('thread',thd),('saveto',saveto))
-chunks=int(chunks*1024)
 plugin.loadplugins(lps,run=1)#运行插件
 th.Thread(target=prog).start()#显示进度
 if acc:#若支持断点续传便创建多线程
