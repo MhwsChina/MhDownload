@@ -15,9 +15,9 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001d',0
+jd,lk,ver,yxz={},th.Lock(),'v0.001e',0
 hd={
-    'User-Agent': f'Mhdl/{ver[1:]}',
+    'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
     }#自定义请求头
 def fmbt(num):
@@ -116,7 +116,13 @@ def dl_normal(fn):#不支持断点续传时调用该函数
                     f.write(c);jd[p][1]=f.tell()-1
             break
         except req.exceptions.StreamConsumedError:
-            rs1=req.get(url,headers=hd,verify=False,timeout=timeout)
+            try:
+                rs1=req.get(url,headers=hd,verify=False,timeout=timeout)
+                with open(p,'wb') as f:
+                    for c in rs1.iter_content(chunk_size=chunks):
+                        f.write(c);jd[p][1]=f.tell()-1
+                    break
+            except Exception as ex:print(ex,start='\r',mode='ERROR')
         except Exception as ex:print(ex,start='\r',mode='ERROR')
     input('\n下载完毕!')
     os._exit(0)
