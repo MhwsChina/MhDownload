@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001e',0
+jd,lk,ver,yxz={},th.Lock(),'v0.001f',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -54,7 +54,7 @@ def prog(cd=40,n='#',n1='.'):#显示进度
         if fs and jd:#检测文件总大小是否大于0才输出进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
             jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
-            if int(tm-sttm)%5==0:sp1=(t-yxz)/(tm-sttm)#每5秒计算一次平均速度
+            if int(tm-sttm)%5==0:sp1=round((t-yxz)/(tm-sttm),3)#每5秒计算一次平均速度
             t1,oldt,oldtm=int(jd1*cd),t,tm
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
