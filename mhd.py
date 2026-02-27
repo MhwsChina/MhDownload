@@ -1,6 +1,6 @@
 import requests as req#下载
 import threading as th#多线程
-import os,shutil,plugin,sys,urllib.parse#文件、插件、日志、url解码
+import os,shutil,plugin,sys,urllib.parse,update#文件、插件、日志、url解码、更新
 from log import getjs,setjs,updatejs#保存配置，如线程数、超时时长等
 from time import sleep,time#停顿
 from json import dumps#json转string
@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0012',0
+jd,lk,ver,yxz={},th.Lock(),'v0.002',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -34,7 +34,7 @@ def fmtime(sec):
         if sec>=3600:h+=1;sec-=3600;continue
         if sec>=60:m+=1;sec-=60;continue
         s+=int(sec);break
-    return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+(str(s)+"秒" if s else "")
+    return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+str(s)+"秒"
 def sum1(ls,ia=lambda a:a):#列表求和，用于计算进度
     t=0
     for i in ls:t+=ia(i)
@@ -51,11 +51,12 @@ def baoliu(num,t='0.01'):
     else:ff=f[0:-(int(t)//10)];ff+=(len(f)-len(ff))*'0';return ff
 def prog(cd=40,n='▌',n1='.'):#显示进度
     global jd,ab,yxz
-    savtmp,oldt,oldtm=os.path.join(saveto,'mhdltmp'),0,time()
+    savtmp,oldt,oldtm=os.path.join(saveto,'mhdtmp'),0,time()
     sttm,sp1=oldtm,0
     while ab:
         sleep(0.2)#停顿一下不然一直计算进度占用cpu很大
         if ab==2:ab=0
+        if ab==3:ab=4
         if fs and jd:#检测文件总大小是否大于0才输出进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
             jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
@@ -65,6 +66,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
             print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
+        if ab==4:return
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
@@ -78,7 +80,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
     input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
 def dl(fn,s,e):
     global jd,yxz
-    p=os.path.join(saveto,"mhdltmp",f'{s}{e}{fn}')#分片下载临时文件
+    p=os.path.join(saveto,"mhdtmp",f'{s}{e}{fn}')#分片下载临时文件
     jd[p]=[0,0,s,e,0,[]]#进度，格式为[分片的大小,已下载大小,下载起点,下载终点,帮助大小,帮助过自己的线程]
     '''如果某线程下载完了，会帮助其他线程下载。
     计算方法是：把其他没下载完的某一线程的剩余部分取一半来给自己下载
@@ -120,19 +122,18 @@ def dl_normal(fn):#不支持断点续传时调用该函数
             rs1=req.get(url,headers=hd,verify=False,stream=True,timeout=timeout)
             with open(p,'wb') as f:
                 for c in rs1.iter_content(chunk_size=chunks):
-                    f.write(c);jd[p][1]=f.tell()-1
+                    f.write(c);jd[p][1]=f.tell()
             break
         except req.exceptions.StreamConsumedError:
             try:
                 rs1=req.get(url,headers=hd,verify=False,timeout=timeout)
                 with open(p,'wb') as f:
                     for c in rs1.iter_content(chunk_size=chunks):
-                        f.write(c);jd[p][1]=f.tell()-1
+                        f.write(c);jd[p][1]=f.tell()
                 break
             except Exception as ex:print(ex,start='\r',mode='ERROR')
         except Exception as ex:print(ex,start='\r',mode='ERROR')
-    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
-    os._exit(0)
+    input(save,f'下载完毕!{("完整性:"+str(jd[p][1]==fs)) if fs else ""}按Enter退出程序...\n',mode='SUCCESSFUL');os._exit(0)
 def inputf(txt,typ=str,ls=[],ifn=None,err='输入错误'):
     while 1:
         tmpa=input(txt)
@@ -161,24 +162,61 @@ def fenxi(url,ex):
     if exname=='ConnectTimeout':print('错误原因:连接超时!',mode='WARN')
     if exname=='ReadTimeout':print('错误原因:读取超时!',mode='WARN')
     return url
+def tiaozhuan(url):
+    global hd,rs
+    while 1:
+        #检测跳转
+        try:rs=req.head(url,headers=hd,verify=False,timeout=timeout)
+        except Exception as ex:print('连接服务器时发生',ex.__class__.__name__,'错误!',mode='ERROR');url=fenxi(url,ex);continue
+        lc=rs.headers.get('Location',0)
+        if lc:hd['Referer'],url=url,lc;print('检测到跳转',lc)
+        else:return url
+def dl_thread(_ex=1):
+    global ab
+    threads=[];prgth=th.Thread(target=prog);prgth.start()#显示进度
+    if acc:#若支持断点续传便创建多线程
+        for tst,te in qp(fs,thd):
+            ta=th.Thread(target=dl,args=(save,tst,te))
+            ta.start()
+            threads.append(ta)
+        for ta in threads:ta.join()
+        ab=2;prgth.join()
+    else:#不支持断点续传
+        print('不支持断点续传!')
+        ta=th.Thread(target=dl_normal,args=(save,))
+        ta.start()
+        ta.join()
+        if not _ex:ab=3
 print('MhDownload(MhD) 多线程下载器')
 print(ver,'by _MhwsChina_')
 print('上次下载的网址:',getjs(('bf','无')))
 print('#########注意###########')
 print('#本程序没有UI界面,还在开发中,所以需要用键盘在本窗口输入内容(支持复制粘贴,右键该窗口可粘贴复制的内容)')
 print('#若有默认值,留空并回车程序会自动选择默认值')
+try:os.remove('removeThisFile');shutil.rmtree('mhdtmp')
+except:pass
+if getjs(('update',True)) and inputf('CHECK_UPDATE / 是否检查更新? (Y/n,默认是)',ifn='y',ls=['Y','y','N','n']).lower()=='y':
+    url,fs,save=update.getupdate(ver,_zip='.py' in sys.argv[0])
+    if url:
+        print('发现可用更新!更新完毕请重启程序!',mode='TIPS')
+        print('检测到最新版本下载地址:',url,mode='')
+        if '.py' in sys.argv[0]:
+            for i in range(5):print('检测到以源代码形式运行!将为你下载新版本代码的压缩包到本程序所在文件夹!',mode='WARN')
+        else:
+            shutil.move(sys.argv[0],'removeThisFile')
+            try:os.mkdir('mhdtmp')
+            except:pass
+        timeout,saveto,chunks,ab=100,'',131072,1
+        url,thd=tiaozhuan(url),4
+        acc=rs.headers.get('Accept-Ranges') == 'bytes'
+        dl_thread(0)
+    else:print('已经是最新版本!')
 try:url=sys.argv[1]
 except:url=inputf('URL / 网址 -')
 timeout=inputf(f'TIMEOUT /超时时长 (默认为{getjs(("timeout",5))})-',int,ifn=getjs("timeout"))
 cookie=inputf('Cookie?(留空为无,默认为无,别乱填,正常都不需要)',ifn='')
 if cookie:hd['Cookie']=cookie
-while 1:
-    #检测跳转
-    try:rs=req.head(url,headers=hd,verify=False,timeout=timeout)
-    except Exception as ex:print('连接服务器时发生',ex.__class__.__name__,'错误!',mode='ERROR');url=fenxi(url,ex);continue
-    lc=rs.headers.get('Location',0)
-    if lc:hd['Referer'],url=url,lc;print('检测到跳转',lc)
-    else:setjs(('bf',url));break
+url=tiaozhuan(url)
 acc=rs.headers.get('Accept-Ranges') == 'bytes'#是否支持断点续传
 fs=int(rs.headers.get('Content-Length',0))#文件总大小,0表示未知
 #下列代码计算文件名
@@ -202,20 +240,8 @@ except:saveto=getjs(("saveto",""));saveto=inputf(f'FOLDER /保存文件夹 (默�
 thd,chunks,threads,ab=inputf(f'THREAD /线程数 (默认为{getjs(("thread",32))})-',int,ifn=getjs("thread")),131072,[],1
 lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
-try:os.makedirs(os.path.join(saveto,'mhdltmp'))#创建临时文件夹
+try:os.makedirs(os.path.join(saveto,'mhdtmp'))#创建临时文件夹
 except:pass
-setjs(('timeout',timeout),('thread',thd),('saveto',saveto))
+setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url))
 plugin.loadplugins(lps,run=1)#运行插件
-th.Thread(target=prog).start()#显示进度
-if acc:#若支持断点续传便创建多线程
-    for tst,te in qp(fs,thd):
-        ta=th.Thread(target=dl,args=(save,tst,te))
-        ta.start()
-        threads.append(ta)
-    for ta in threads:ta.join()
-else:#不支持断点续传
-    print('不支持断点续传!')
-    ta=th.Thread(target=dl_normal,args=(save,))
-    ta.start()
-    ta.join()
-ab=2
+dl_thread()

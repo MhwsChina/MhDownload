@@ -9,6 +9,7 @@ with open('mhconfig.json','a+') as jfr:
 def write(txt,mode=None,b='',end='\n',start=''):
     if txt=='\n':return
     if not txt:return
+    if txt[-1]=='\n':end=''
     m=sys._getframe(1).f_globals['__name__']
     m='' if m=='__main__' else f'[{m}]: '
     t=time.strftime('%H:%M:%S',time.localtime(time.time()))
