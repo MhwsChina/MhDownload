@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0022',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0023',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -195,7 +195,7 @@ print('#本程序没有UI界面,还在开发中,所以需要用键盘在本窗�
 print('#若有默认值,留空并回车程序会自动选择默认值')
 try:os.remove('removeThisFile');shutil.rmtree('mhdtmp')
 except:pass
-if getjs(('update',True)) and inputf('CHECK_UPDATE / 是否检查更新? (Y/n,默认是)',ifn='y',ls=['Y','y','N','n']).lower()=='y':
+if getjs(('update',1)) and inputf('CHECK_UPDATE / 是否检查更新? (Y/n,默认是)-',ifn='y',ls=['Y','y','N','n']).lower()=='y':
     url,fs,save=update.getupdate(ver,_zip='.py' in sys.argv[0])
     if url:
         print('发现可用更新!更新完毕请重启程序!',mode='TIPS')
