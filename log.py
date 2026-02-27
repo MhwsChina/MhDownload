@@ -21,7 +21,10 @@ def write(txt,mode=None,b='',end='\n',start=''):
     if not b:
         if mode=='WARN':b='\033[33m'
         if mode=='ERROR' or mode=='ERR':b='\033[31m'
-    _write(f'\033[1m{start}{b}[{t} {mode}]: {m}{txt}{end}\033[0m')
+        if mode=='TIPS':b='\033[34m'
+        if mode=='SUC' or mode=='SUCCESSFUL':b='\033[32m'
+        if mode=='PROG' or mode=='PROGRESS':b='\033[37;42m'
+    _write(f'\033[1m{start}{b}[{t} {mode}]: {m}{txt}\033[K\033[0m{end}')
     sys.stdout.flush()
 def getjs(*st):
     m,a=sys._getframe(1).f_globals['__name__'],[]

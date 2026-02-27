@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001f',0
+jd,lk,ver,yxz={},th.Lock(),'v0.001',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -44,7 +44,7 @@ def qp(a,b):
     l=[[int(a*i/b)+1,int(a*(i+1)/b)] for i in range(b)]
     l[0][0],l[-1][-1]=0,a-1
     return l
-def prog(cd=40,n='#',n1='.'):#显示进度
+def prog(cd=40,n='▌',n1='.'):#显示进度
     global jd,ab,yxz
     savtmp,oldt,oldtm=os.path.join(saveto,'mhdltmp'),0,time()
     sttm,sp1=oldtm,0
@@ -54,11 +54,11 @@ def prog(cd=40,n='#',n1='.'):#显示进度
         if fs and jd:#检测文件总大小是否大于0才输出进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
             jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
-            if int(tm-sttm)%5==0:sp1=round((t-yxz)/(tm-sttm),3)#每5秒计算一次平均速度
+            if int(tm-sttm)%5==0:sp1=round((t-yxz)/(tm-sttm),3)#每5秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
-            print(f'[{t1*n}{(cd-t1)*n1}]%.2f%% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s      '%(jd1*100),end='',start='\r',mode='PROGRESS')
+            print(f'[{t1*n}{(cd-t1)*n1}]%.2f%% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s'%(jd1*100),end='',start='\r',mode='PROGRESS')
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
@@ -67,8 +67,9 @@ def prog(cd=40,n='#',n1='.'):#显示进度
         os.remove(f)#移除分片文件
     fs1=f_a.tell()
     f_a.close()
-    print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',fs==fs1,start='\n')
-    input('下载完毕!\n\n按Enter退出程序...')
+    print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',('完整' if fs==fs1 else '不完整'),start='\n')
+    if fs!=fs1:print('文件未下载完整,请尝试重新下载!',mode='WARN')
+    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
 def dl(fn,s,e):
     global jd,yxz
     p=os.path.join(saveto,"mhdltmp",f'{s}{e}{fn}')#分片下载临时文件
@@ -102,7 +103,7 @@ def dl(fn,s,e):
         jd[f][4],ns=n+bc,sb+n+bc+1;jd[f][5].append(p)
         jd[f][0]=jd[f][4]-jd[f][2]
         lk.release()
-        print(f'{sb} {eb}/{sb} {sb+n+bc} {sb+n+bc+1} {eb}     ',start='\r')#输出帮助信息
+        print(f'{sb} {eb}/{sb} {sb+n+bc} {sb+n+bc+1} {eb}',start='\r')#输出帮助信息
         dl(fn,ns,eb);return
 def dl_normal(fn):#不支持断点续传时调用该函数
     global ab,jd
@@ -124,19 +125,36 @@ def dl_normal(fn):#不支持断点续传时调用该函数
                     break
             except Exception as ex:print(ex,start='\r',mode='ERROR')
         except Exception as ex:print(ex,start='\r',mode='ERROR')
-    input('\n下载完毕!')
+    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
     os._exit(0)
 def inputf(txt,typ=str,ls=[],ifn=None,err='输入错误'):
     while 1:
         tmpa=input(txt)
         if tmpa.replace(' ','')=='':
             if ifn!=None:return ifn
-            else:print(err,mode='ERROR');continue
+            else:print('输入不能为空!',mode='ERROR');continue
         try:
             tmpa=typ(tmpa)
             if ls and not tmpa in ls:raise RuntimeError
             return tmpa
         except:print(err)
+def fenxi(url,ex):
+    print('正在分析错误...')
+    tmp,exname=ex.args[0],ex.__class__.__name__
+    while type(tmp)!=str:
+        tmp1=tmp.__class__.__name__
+        tmp=tmp.args[0]
+    print(ex,mode='WARN')
+    if 'MissingSchema'==exname:
+        print('错误原因:网址前面漏加了http://或https://,程序将自动补全!',mode='WARN')
+        url1=findall('meant .+',tmp)[0].replace('meant ','')[0:-1]
+        print('纠正后网址:',url1,mode='TIPS');return url1
+    if 'getaddrinfo failed' in tmp or 'InvalidSchema'==exname or 'Invalid URL'==exname:
+        print('错误原因:无法解析网址的服务器地址,网址无效!',mode='WARN')
+        return inputf('URL / 网址 -')
+    if exname=='ConnectTimeout':print('错误原因:连接超时!',mode='WARN')
+    if exname=='ReadTimeout':print('错误原因:读取超时!',mode='WARN')
+    return url
 print('MhDownload(MhD) 多线程下载器')
 print(ver,'by _MhwsChina_')
 print('上次下载的网址:',getjs(('bf','无')))
@@ -146,12 +164,12 @@ print('#若有默认值,留空并回车程序会自动选择默认值')
 try:url=sys.argv[1]
 except:url=inputf('URL / 网址 -')
 timeout=inputf(f'TIMEOUT /超时时长 (默认为{getjs(("timeout",5))})-',int,ifn=getjs("timeout"))
-cookie=inputf('Cookie?(留空为无)',ifn='')
+cookie=inputf('Cookie?(留空为无,默认为无,别乱填,正常都不需要)',ifn='')
 if cookie:hd['Cookie']=cookie
 while 1:
     #检测跳转
     try:rs=req.head(url,headers=hd,verify=False,timeout=timeout)
-    except Exception as ex:print(ex,mode='ERROR');continue
+    except Exception as ex:print('连接服务器时发生',ex.__class__.__name__,'错误!',mode='ERROR');url=fenxi(url,ex);continue
     lc=rs.headers.get('Location',0)
     if lc:hd['Referer'],url=url,lc;print('检测到跳转',lc)
     else:setjs(('bf',url));break
