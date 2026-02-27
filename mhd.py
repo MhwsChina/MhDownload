@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.001',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0011',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -44,6 +44,11 @@ def qp(a,b):
     l=[[int(a*i/b)+1,int(a*(i+1)/b)] for i in range(b)]
     l[0][0],l[-1][-1]=0,a-1
     return l
+def baoliu(num,t='0.01'):
+    try:f,f1=str(num).split('.')
+    except:f,f1=str(num),''
+    if float(t)<1:fl=len(t.split('.')[1]);ff=f1[0:fl];ff+=(fl-len(ff))*'0';return '.'.join([str(f),ff])
+    else:ff=f[0:-(int(t)//10)];ff+=(len(f)-len(ff))*'0';return ff
 def prog(cd=40,n='▌',n1='.'):#显示进度
     global jd,ab,yxz
     savtmp,oldt,oldtm=os.path.join(saveto,'mhdltmp'),0,time()
@@ -54,11 +59,12 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
         if fs and jd:#检测文件总大小是否大于0才输出进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
             jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
+            if jd1>1:jd1=1
             if int(tm-sttm)%5==0:sp1=round((t-yxz)/(tm-sttm),3)#每5秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
-            print(f'[{t1*n}{(cd-t1)*n1}]%.2f%% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s'%(jd1*100),end='',start='\r',mode='PROGRESS')
+            print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
@@ -122,7 +128,7 @@ def dl_normal(fn):#不支持断点续传时调用该函数
                 with open(p,'wb') as f:
                     for c in rs1.iter_content(chunk_size=chunks):
                         f.write(c);jd[p][1]=f.tell()-1
-                    break
+                break
             except Exception as ex:print(ex,start='\r',mode='ERROR')
         except Exception as ex:print(ex,start='\r',mode='ERROR')
     input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
