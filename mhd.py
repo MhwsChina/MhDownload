@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.002',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0021',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -156,7 +156,7 @@ def fenxi(url,ex):
         print('错误原因:网址前面漏加了http://或https://,程序将自动补全!',mode='WARN')
         url1=findall('meant .+',tmp)[0].replace('meant ','')[0:-1]
         print('纠正后网址:',url1,mode='TIPS');return url1
-    if 'getaddrinfo failed' in tmp or 'InvalidSchema'==exname or 'Invalid URL'==exname:
+    if 'getaddrinfo failed' in tmp or 'InvalidSchema'==exname or 'InvalidURL'==exname:
         print('错误原因:无法解析网址的服务器地址,网址无效!',mode='WARN')
         return inputf('URL / 网址 -')
     if exname=='ConnectTimeout':print('错误原因:连接超时!',mode='WARN')
@@ -210,7 +210,7 @@ if getjs(('update',True)) and inputf('CHECK_UPDATE / 是否检查更新? (Y/n,�
         url,thd=tiaozhuan(url),4
         acc=rs.headers.get('Accept-Ranges') == 'bytes'
         dl_thread(0)
-    else:print('已经是最新版本!')
+    else:print('已经是最新版本!',mode='WARN')
 try:url=sys.argv[1]
 except:url=inputf('URL / 网址 -')
 timeout=inputf(f'TIMEOUT /超时时长 (默认为{getjs(("timeout",5))})-',int,ifn=getjs("timeout"))
