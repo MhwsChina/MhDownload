@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0011',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0012',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -64,7 +64,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             t1,oldt,oldtm=int(jd1*cd),t,tm
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
-            print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
+            print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
