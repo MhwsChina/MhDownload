@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0021',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0022',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -77,7 +77,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
     f_a.close()
     print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',('完整' if fs==fs1 else '不完整'),start='\n')
     if fs!=fs1:print('文件未下载完整,请尝试重新下载!',mode='WARN')
-    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL')
+    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL');os._exit(0)
 def dl(fn,s,e):
     global jd,yxz
     p=os.path.join(saveto,"mhdtmp",f'{s}{e}{fn}')#分片下载临时文件
