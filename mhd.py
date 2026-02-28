@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0025',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0026',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -196,8 +196,8 @@ print('#本程序没有UI界面,还在开发中,所以需要用键盘在本窗�
 print('#若有默认值,留空并回车程序会自动选择默认值')
 try:os.remove('removeThisFile');shutil.rmtree('updatetmp')
 except:pass
-update=inputf(f'CHECK_UPDATE / 是否检查更新? (Y/n,默认{getjs(("update","Y"))})-',ifn=getjs('update'),ls=['Y','y','N','n']) if getjs(('askupdate',True)) else 'n'
-if update.lower()=='y':
+isupdate=inputf(f'CHECK_UPDATE / 是否检查更新? (Y/n,默认{getjs(("update","Y"))})-',ifn=getjs('update'),ls=['Y','y','N','n']) if getjs(('askupdate',True)) else 'n'
+if isupdate.lower()=='y':
     url,fs,save=update.getupdate(ver,_zip='.py' in sys.argv[0])
     if url:
         print('发现可用更新!更新完毕请重启程序!',mode='TIPS')
@@ -245,6 +245,6 @@ lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
 try:os.mkdir(tmpfd)#创建临时文件夹
 except:pass
-setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url),('update',update))
+setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url),('update',isupdate))
 plugin.loadplugins(lps,run=1)#运行插件
 dl_thread()
