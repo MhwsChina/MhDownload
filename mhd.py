@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0024',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0025',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -51,7 +51,7 @@ def baoliu(num,t='0.01'):
     else:ff=f[0:-(int(t)//10)];ff+=(len(f)-len(ff))*'0';return ff
 def prog(cd=40,n='▌',n1='.'):#显示进度
     global jd,ab,yxz
-    savtmp,oldt,oldtm=os.path.join(saveto,'mhdtmp'),0,time()
+    oldt,oldtm=0,time()
     sttm,sp1=oldtm,0
     while ab:
         sleep(0.2)#停顿一下不然一直计算进度占用cpu很大
@@ -71,7 +71,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
         with open(f,'rb') as f_b:
-            print(f'合并{f.replace(savtmp,"")}',start='\r',end='');shutil.copyfileobj(f_b,f_a,16777216)#合并分片文件
+            print(f'合并{f.replace(tmpfd,"")}',start='\r',end='');shutil.copyfileobj(f_b,f_a,16777216)#合并分片文件
         os.remove(f)#移除分片文件
     fs1=f_a.tell()
     f_a.close()
@@ -80,7 +80,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
     input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL');os._exit(0)
 def dl(fn,s,e):
     global jd,yxz
-    p=os.path.join(saveto,"mhdtmp",f'{s}{e}{fn}')#分片下载临时文件
+    p=os.path.join(tmpfd,f'{s}{e}{fn}')#分片下载临时文件
     jd[p]=[0,0,s,e,0,[]]#进度，格式为[分片的大小,已下载大小,下载起点,下载终点,帮助大小,帮助过自己的线程]
     '''如果某线程下载完了，会帮助其他线程下载。
     计算方法是：把其他没下载完的某一线程的剩余部分取一半来给自己下载
@@ -172,7 +172,7 @@ def tiaozhuan(url):
         lc=rs.headers.get('Location',0)
         if lc:hd['Referer'],url=url,lc;print('检测到跳转',lc)
         else:return url
-def dl_thread(_ex=1):
+def dl_thread():
     global ab
     threads=[];prgth=th.Thread(target=prog);prgth.start()#显示进度
     if acc:#若支持断点续传便创建多线程
@@ -187,14 +187,14 @@ def dl_thread(_ex=1):
         ta=th.Thread(target=dl_normal,args=(save,))
         ta.start()
         ta.join()
-        if not _ex:ab=3
+        ab=3
 print('MhDownload(MhD) 多线程下载器')
 print(ver,'by _MhwsChina_')
 print('上次下载的网址:',getjs(('bf','无')))
 print('#########注意###########')
 print('#本程序没有UI界面,还在开发中,所以需要用键盘在本窗口输入内容(支持复制粘贴,右键该窗口可粘贴复制的内容)')
 print('#若有默认值,留空并回车程序会自动选择默认值')
-try:os.remove('removeThisFile');shutil.rmtree('mhdtmp')
+try:os.remove('removeThisFile');shutil.rmtree('updatetmp')
 except:pass
 update=inputf(f'CHECK_UPDATE / 是否检查更新? (Y/n,默认{getjs(("update","Y"))})-',ifn=getjs('update'),ls=['Y','y','N','n']) if getjs(('askupdate',True)) else 'n'
 if update.lower()=='y':
@@ -205,17 +205,18 @@ if update.lower()=='y':
         if '.py' in sys.argv[0]:
             for i in range(5):print('检测到以源代码形式运行!将为你下载新版本代码的压缩包到本程序所在文件夹!',mode='WARN')
         else:
+            tmpfd='updatetmp'
             shutil.move(sys.argv[0],'removeThisFile')
-            try:os.mkdir('mhdtmp')
+            try:os.mkdir('updatetmp')
             except:pass
         timeout,saveto,chunks,ab=100,'',131072,1
         url,thd=tiaozhuan(url),4
         acc=rs.headers.get('Accept-Ranges') == 'bytes'
-        dl_thread(0)
+        dl_thread()
     else:print('已经是最新版本!',mode='WARN')
 try:url=sys.argv[1]
 except:url=inputf('URL / 网址 -')
-timeout=inputf(f'TIMEOUT /超时时长 (默认为{getjs(("timeout",5))})-',int,ifn=getjs("timeout"))
+timeout,tmpfd=inputf(f'TIMEOUT /超时时长 (默认为{getjs(("timeout",5))})-',int,ifn=getjs("timeout")),'mhdtmp'
 cookie=inputf('Cookie?(留空为无,默认为无,别乱填,正常都不需要)',ifn='')
 if cookie:hd['Cookie']=cookie
 url=tiaozhuan(url)
@@ -242,7 +243,7 @@ except:saveto=getjs(("saveto",""));saveto=inputf(f'FOLDER /保存文件夹 (默�
 thd,chunks,threads,ab=inputf(f'THREAD /线程数 (默认为{getjs(("thread",32))})-',int,ifn=getjs("thread")),131072,[],1
 lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
-try:os.makedirs(os.path.join(saveto,'mhdtmp'))#创建临时文件夹
+try:os.mkdir(tmpfd)#创建临时文件夹
 except:pass
 setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url),('update',update))
 plugin.loadplugins(lps,run=1)#运行插件
