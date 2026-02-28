@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0023',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0024',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -135,6 +135,7 @@ def dl_normal(fn):#不支持断点续传时调用该函数
         except Exception as ex:print(ex,start='\r',mode='ERROR')
     input(save,f'下载完毕!{("完整性:"+str(jd[p][1]==fs)) if fs else ""}按Enter退出程序...\n',mode='SUCCESSFUL');os._exit(0)
 def inputf(txt,typ=str,ls=[],ifn=None,err='输入错误'):
+    if ifn and ls and not ifn in ls:ifn=ls[0]
     while 1:
         tmpa=input(txt)
         if tmpa.replace(' ','')=='':
@@ -195,7 +196,8 @@ print('#本程序没有UI界面,还在开发中,所以需要用键盘在本窗�
 print('#若有默认值,留空并回车程序会自动选择默认值')
 try:os.remove('removeThisFile');shutil.rmtree('mhdtmp')
 except:pass
-if getjs(('update',1)) and inputf('CHECK_UPDATE / 是否检查更新? (Y/n,默认是)-',ifn='y',ls=['Y','y','N','n']).lower()=='y':
+update=inputf(f'CHECK_UPDATE / 是否检查更新? (Y/n,默认{getjs(("update","Y"))})-',ifn=getjs('update'),ls=['Y','y','N','n']) if getjs(('askupdate',True)) else 'n'
+if update.lower()=='y':
     url,fs,save=update.getupdate(ver,_zip='.py' in sys.argv[0])
     if url:
         print('发现可用更新!更新完毕请重启程序!',mode='TIPS')
@@ -242,6 +244,6 @@ lps=__import__('__main__')
 plugin.loadplugins(lps)#加载插件
 try:os.makedirs(os.path.join(saveto,'mhdtmp'))#创建临时文件夹
 except:pass
-setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url))
+setjs(('timeout',timeout),('thread',thd),('saveto',saveto),('bf',url),('update',update))
 plugin.loadplugins(lps,run=1)#运行插件
 dl_thread()
