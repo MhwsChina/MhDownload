@@ -15,7 +15,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0026',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0027',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -61,7 +61,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             t,tm=sum1(list(jd.values()),lambda a:a[1]),time()
             jd1,sp=t/fs,(t-oldt)/(tm-oldtm)
             if jd1>1:jd1=1
-            if int(tm-sttm)%5==0:sp1=round((t-yxz)/(tm-sttm),3)#每5秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
+            if int(tm-sttm)%3==0:sp1=round((t-yxz)/(tm-sttm),3)#每3秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
             if sp1:syt=fmtime((fs-t)/int(sp1))
             else:syt='--秒'
