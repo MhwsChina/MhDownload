@@ -16,7 +16,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.004',0
+jd,lk,ver,yxz={},th.Lock(),'v0.1',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -29,13 +29,14 @@ def fmbt(num):
     if c[-1]=='.':c=c[0:-1]
     return c+d
 def fmtime(sec):
+    sec=ceil(sec)
     if sec<=0:return '0秒'
     h,m,s=0,0,0
     while sec:
         if sec>=3600:h+=1;sec-=3600;continue
         if sec>=60:m+=1;sec-=60;continue
-        s+=ceil(sec);break
-    return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+str(s)+"秒"
+        s+=sec;break
+    return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+(str(s)+"秒" if (m or h) and s or (not h and not m) and s else "")
 def sum1(ls,ia=lambda a:a):#列表求和，用于计算进度
     t=0
     for i in ls:t+=ia(i)
