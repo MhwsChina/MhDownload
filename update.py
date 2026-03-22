@@ -7,11 +7,12 @@ project='MhDownload'
 url=f'https://api.github.com/repos/{auther}/{project}/releases'
 def getupdate(nowver,find='mhd.exe',_zip=0):
     json=req.get(url,timeout=10,verify=False).json()
-    newver=None
+    newver,nowver=None,float(".".join(findall(r"\d+",nowver)))
     for i in json:
         if 'v' in i['name']:
             newver,dic=float('.'.join(findall(r"\d+",i['name']))),i
-            break
+            if newver<=nowver:newver=None
+            else:break
     if not newver:return 0,0,0
     if float('.'.join(findall(r"\d+",nowver)))<newver:
         if _zip:return dic['zipball_url'],0,i['name']+'.zip'
