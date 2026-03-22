@@ -16,7 +16,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0029',0
+jd,lk,ver,yxz={},th.Lock(),'v0.004',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -64,9 +64,9 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             if jd1>1:jd1=1
             if int(tm-sttm)%3==0:sp1=round((t-yxz)/(tm-sttm),3)#每3秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
-            if sp1:syt=fmtime((fs-t)/sp1*1.5)#乘以1.5为了让变化更明显
+            if sp1:syt=fmtime((fs-t)/sp1)
             else:syt='--秒'
-            print(f'\033[0m\033[1m[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
+            print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
         if ab==4:return
     print('_',start='\n',end='\r')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存

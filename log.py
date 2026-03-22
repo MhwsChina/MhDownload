@@ -24,7 +24,7 @@ def write(txt,mode=None,b='',end='\n',start=''):
         if mode=='ERROR' or mode=='ERR':b='\033[31m'
         if mode=='TIPS':b='\033[34m'
         if mode=='SUC' or mode=='SUCCESSFUL':b='\033[32m'
-        if mode=='PROG' or mode=='PROGRESS':b='\033[37;42m'
+        if mode=='PROG' or mode=='PROGRESS':b,m='\033[37;42m','\033[0m\033[1m'+m
     _write(f'\033[1m{start}{b}[{t} {mode}]: {m}{txt}\033[K\033[0m{end}')
     sys.stdout.flush()
 def getjs(*st):
