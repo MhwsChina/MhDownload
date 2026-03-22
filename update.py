@@ -9,14 +9,12 @@ def getupdate(nowver,find='mhd.exe',_zip=0):
     json=req.get(url,timeout=10,verify=False).json()
     newver,nowver=None,float(".".join(findall(r"\d+",nowver)))
     for i in json:
-        if 'v' in i['name']:
-            newver,dic=float('.'.join(findall(r"\d+",i['name']))),i
-            if newver<=nowver:newver=None
-            else:break
-    if not newver:return 0,0,0
-    if float('.'.join(findall(r"\d+",nowver)))<newver:
-        if _zip:return dic['zipball_url'],0,i['name']+'.zip'
-        for i in dic['assets']:
-            if i['name']==find:
-                return i['browser_download_url'],i['size'],split(sys.argv[0])[1]
+        if 'v' in i['tag_name']:
+            newver,dic=float('.'.join(findall(r"\d+",i['tag_name']))),i
+            break
+    if nowver>=newver or not newver:return 0,0,0
+    if _zip:return dic['zipball_url'],0,dic['tag_name']+'.zip'
+    for i in dic['assets']:
+        if i['name']==find:
+            return i['browser_download_url'],i['size'],split(sys.argv[0])[1]
     return 0,0,0
