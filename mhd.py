@@ -6,6 +6,7 @@ from time import sleep,time#停顿
 from json import dumps#json转string
 from re import findall#正规表达式findall方法,计算文件名
 from urllib3 import disable_warnings#取消requests的ssl证书警告
+from math import ceil
 #自定义print和input,不然输出很奇怪
 def print(*args,sep=' ',mode='INFO',end='\n',start=''):
     txt=sep.join(map(str,[*args]))
@@ -15,7 +16,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0027',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0028',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -33,7 +34,7 @@ def fmtime(sec):
     while sec:
         if sec>=3600:h+=1;sec-=3600;continue
         if sec>=60:m+=1;sec-=60;continue
-        s+=int(sec);break
+        s+=ceil(sec);break
     return (str(h)+"小时" if h else "")+(str(m)+"分钟" if m else "")+str(s)+"秒"
 def sum1(ls,ia=lambda a:a):#列表求和，用于计算进度
     t=0
@@ -63,9 +64,9 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             if jd1>1:jd1=1
             if int(tm-sttm)%3==0:sp1=round((t-yxz)/(tm-sttm),3)#每3秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
-            if sp1:syt=fmtime((fs-t)/int(sp1))
+            if sp1:syt=fmtime((fs-t)/sp1)
             else:syt='--秒'
-            print(f'[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
+            print(f'\033[0m\033[1m[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
         if ab==4:return
     print('_',start='\n',end='')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
