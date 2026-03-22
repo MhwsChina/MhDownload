@@ -16,7 +16,7 @@ def input(*args,sep=' ',mode='请输入',end=''):
     print(*args,sep=sep,mode=mode,end=end)
     return _input()
 disable_warnings()#取消requests的ssl证书警告
-jd,lk,ver,yxz={},th.Lock(),'v0.0028',0
+jd,lk,ver,yxz={},th.Lock(),'v0.0029',0
 hd={
     'User-Agent': 'Mhdl/'+".".join(findall(r"\d+",ver)),
     'Accept-Encoding': 'br'
@@ -64,11 +64,11 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
             if jd1>1:jd1=1
             if int(tm-sttm)%3==0:sp1=round((t-yxz)/(tm-sttm),3)#每3秒计算一次平均速度,增加剩余时间计算准确性,使剩余时间更稳定
             t1,oldt,oldtm=int(jd1*cd),t,tm
-            if sp1:syt=fmtime((fs-t)/sp1)
+            if sp1:syt=fmtime((fs-t)/sp1*1.5)#乘以1.5为了让变化更明显
             else:syt='--秒'
             print(f'\033[0m\033[1m[{t1*n}{(cd-t1)*n1}]{baoliu(jd1*100)}% 剩余{syt} {fmbt(sp)}/s 平均{fmbt(sp1)}/s',end='',start='\r',mode='PROGRESS')
         if ab==4:return
-    print('_',start='\n',end='')
+    print('_',start='\n',end='\r')
     f_a=open(os.path.join(saveto,save).replace('\\','/'),'wb')#保存
     for f,v in sorted(list(jd.items()),key=lambda i:i[1][2]):
         with open(f,'rb') as f_b:
@@ -78,7 +78,7 @@ def prog(cd=40,n='▌',n1='.'):#显示进度
     f_a.close()
     print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',('完整' if fs==fs1 else '不完整'),start='\n')
     if fs!=fs1:print('文件未下载完整,请尝试重新下载!',mode='WARN')
-    input('下载完毕!按Enter退出程序...',mode='SUCCESSFUL');os._exit(0)
+    input(save,'下载完毕!按Enter退出程序...',mode='SUCCESSFUL');os._exit(0)
 def dl(fn,s,e):
     global jd,yxz
     p=os.path.join(tmpfd,f'{s}{e}{fn}')#分片下载临时文件
@@ -134,7 +134,11 @@ def dl_normal(fn):#不支持断点续传时调用该函数
                 break
             except Exception as ex:print(ex,start='\r',mode='ERROR')
         except Exception as ex:print(ex,start='\r',mode='ERROR')
-    input(save,f'下载完毕!{("完整性:"+str(jd[p][1]==fs)) if fs else ""}按Enter退出程序...\n',mode='SUCCESSFUL');os._exit(0)
+    ab,fs1=3,jd[p][1]
+    while ab!=4:sleep(0.5)
+    if fs:print('预期大小:',fmbt(fs),f'({fs}字节)','实际大小:',fmbt(fs1),f'({fs1}字节)','文件完整性:',('完整' if fs==fs1 else '不完整'),start='\n')
+    if fs and fs!=fs1:print('文件未下载完整,请尝试重新下载!',mode='WARN')
+    input(save,'下载完毕!按Enter退出程序...\n',mode='SUCCESSFUL');os._exit(0)
 def inputf(txt,typ=str,ls=[],ifn=None,err='输入错误'):
     if ifn and ls and not ifn in ls:ifn=ls[0]
     while 1:
@@ -184,11 +188,10 @@ def dl_thread():
         for ta in threads:ta.join()
         ab=2;prgth.join()
     else:#不支持断点续传
-        print('不支持断点续传!')
+        print('不支持断点续传!将以单线程下载!')
         ta=th.Thread(target=dl_normal,args=(save,))
         ta.start()
         ta.join()
-        ab=3
 print('MhDownload(MhD) 多线程下载器')
 print(ver,'by _MhwsChina_')
 print('上次下载的网址:',getjs(('bf','无')))
