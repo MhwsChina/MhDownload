@@ -3,9 +3,9 @@ import threading
 import json
 import time
 import sys
-
+out=print
 class WebSocketServer:
-    def __init__(self, host='localhost', port=8765,send=print):
+    def __init__(self, host='localhost', port=14431,send=print):
         self.host = host
         self.port = port
         self.send=send
@@ -23,9 +23,8 @@ class WebSocketServer:
             self.server_socket.listen(5)
             self.running = True
             
-            print(f"MhDownload WebSocket服务已启动")
-            print(f"监听地址: ws://{self.host}:{self.port}")
-            print("等待浏览器插件连接...")
+            out(f"MhDownload 浏览器插件服务已启动")
+            out("等待浏览器插件连接...")
             
             # 接受客户端连接的线程
             accept_thread = threading.Thread(target=self.accept_clients)
@@ -34,7 +33,7 @@ class WebSocketServer:
             
                 
         except Exception as e:
-            print(f"服务器启动失败: {e}")
+            out(f"服务器启动失败: {e}")
             self.stop()
     
     def accept_clients(self):
@@ -42,7 +41,7 @@ class WebSocketServer:
         while self.running:
             try:
                 client_socket, client_address = self.server_socket.accept()
-                print(f"新客户端连接: {client_address}")
+                out(f"浏览器插件连接: {client_address}")
                 
                 # 为每个客户端创建处理线程
                 client_thread = threading.Thread(
@@ -54,7 +53,7 @@ class WebSocketServer:
                 
             except Exception as e:
                 if self.running:
-                    print(f"接受客户端连接失败: {e}")
+                    out(f"接受浏览器连接失败: {e}")
                 break
     
     def handle_client(self, client_socket, client_address):
@@ -64,11 +63,11 @@ class WebSocketServer:
             handshake = client_socket.recv(1024).decode('utf-8')
             
             if not self.perform_handshake(client_socket, handshake):
-                print(f"WebSocket握手失败: {client_address}")
+                out(f"WebSocket握手失败: {client_address}")
                 client_socket.close()
                 return
             
-            print(f"WebSocket握手成功: {client_address}")
+            out(f"与浏览器连接成功: {client_address}")
             
             # 添加到客户端列表
             with self.client_lock:
@@ -82,18 +81,18 @@ class WebSocketServer:
                     if data:
                         self.handle_message(data, client_address)
                 except Exception as e:
-                    print(f"接收消息失败: {e}")
+                    out(f"接收消息失败: {e}")
                     break
                     
         except Exception as e:
-            print(f"处理客户端失败: {e}")
+            out(f"处理浏览器连接失败: {e}")
         finally:
             # 移除客户端
             with self.client_lock:
                 if client_socket in self.clients:
                     self.clients.remove(client_socket)
             client_socket.close()
-            print(f"客户端断开连接: {client_address}")
+            print(f"浏览器断开连接: {client_address}")
     
     def perform_handshake(self, client_socket, handshake):
         """执行WebSocket握手"""
@@ -130,7 +129,7 @@ class WebSocketServer:
             return True
             
         except Exception as e:
-            print(f"握手处理失败: {e}")
+            out(f"握手处理失败: {e}")
             return False
     
     def receive_websocket_frame(self, client_socket):
@@ -181,7 +180,7 @@ class WebSocketServer:
             return payload.decode('utf-8')
             
         except Exception as e:
-            print(f"接收帧失败: {e}")
+            out(f"接收帧失败: {e}")
             return None
     
     def send_websocket_frame(self, client_socket, data):
@@ -210,7 +209,7 @@ class WebSocketServer:
             return True
             
         except Exception as e:
-            print(f"发送帧失败: {e}")
+            out(f"发送帧失败: {e}")
             return False
     
     def handle_message(self, message, client_address):
@@ -240,14 +239,13 @@ class WebSocketServer:
                         self.send_websocket_frame(client, json.dumps(response))
                 
         except json.JSONDecodeError:
-            print(f"收到无效JSON: {message}")
+            out(f"收到无效JSON: {message}")
         except Exception as e:
-            print(f"处理消息失败: {e}")
+            out(f"处理消息失败: {e}")
     
     def stop(self):
         """停止服务器"""
-        print("\n正在停止服务器...")
-        self.running = False
+        out("\n正在停止服务器...")
         
         # 关闭所有客户端连接
         with self.client_lock:
@@ -262,7 +260,7 @@ class WebSocketServer:
         if self.server_socket:
             self.server_socket.close()
         
-        print("服务器已停止")
+        out("服务器已停止")
 
 '''def main():
     """主函数"""

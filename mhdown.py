@@ -5,7 +5,7 @@ from time import time
 from math import ceil
 import update as upd
 req.urllib3.disable_warnings()
-ver='v1.0'
+ver='v2'
 hd={'User-Agent': 'MhDown/'+".".join(re.findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
@@ -164,7 +164,7 @@ def worker():
         else:sc=0
         url=ui.dlList.get(sc)
         if not url:continue
-        ui.dlList.delete(sc,sc);ui.prog['mode']='indeterminate';ui.prog.start(100)
+        ui.dlList.delete(sc);ui.prog['mode']='indeterminate';ui.prog.start(100)
         ui.state.set('下载状态:获取文件信息')
         try:url,hd=dl.redi(url);ui.prog.stop();ui.prog['mode']='determinate'
         except:ui.state.set('下载状态:获取文件信息失败');ui.prog.stop();ui.prog['mode']='determinate';continue
@@ -191,6 +191,7 @@ ui.saveto.trace_add('write',updatev)
 ui.update.trace_add('write',updatev)
 th.Thread(target=worker,daemon=True).start()
 exts=extsrv.WebSocketServer('localhost',14431,mainui.addurlw)
+extsrv.out=mainui.log
 exts.start()
 if update:th.Thread(target=cupd,name='checkupdate').start()
 plugin.out=mainui.log
