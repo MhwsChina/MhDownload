@@ -7,3 +7,5 @@ pip install pystray</br>
 使用以下命令默认隐藏窗口:</br>
 python mhdown.py --hide</br>
 mhd.exe --hide</br>
+浏览器插件须先打开本软件才有效</br>
+[点击前往下载浏览器插件](https://wwbxb.lanzouw.com/izUkj3lpehkb)</br>
