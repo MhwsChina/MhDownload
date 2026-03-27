@@ -5,7 +5,7 @@ from time import time
 from math import ceil
 import update as upd
 req.urllib3.disable_warnings()
-ver='v2'
+ver='v3'
 hd={'User-Agent': 'MhDown/'+".".join(re.findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):

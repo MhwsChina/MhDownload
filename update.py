@@ -5,13 +5,12 @@ import sys
 auther='MhwsChina'
 project='MhDownload'
 url=f'https://api.github.com/repos/{auther}/{project}/releases'
-def getupdate(nowver,find='mhd.exe',_zip=0):
+def getupdate(nowver,find='mhdown.exe',_zip=0):
     json=req.get(url,timeout=10,verify=False).json()
     newver,nowver=None,float(".".join(findall(r"\d+",nowver)))
     for i in json:
-        if 'v' in i['tag_name']:
-            newver,dic=float('.'.join(findall(r"\d+",i['tag_name']))),i
-            break
+        newver,dic=float('.'.join(findall(r"\d+",i['tag_name']))),i
+        break
     if nowver>=newver or not newver:return 0,0,0
     if _zip:return dic['zipball_url'],0,dic['tag_name']+'.zip'
     for i in dic['assets']:
