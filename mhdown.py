@@ -6,7 +6,7 @@ from math import ceil
 from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v4'
+ver='v5'
 hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):

@@ -48,8 +48,8 @@ class UI:
     def chupdate(self):
         if not self.cupd():mess.showinfo('MhDown','已是最新版本了!')
     def exit(self):
-        t.stop();w.destroy()
-        while self.t_th.is_alive():sleep(0.1)
+        t.stop()
+        sleep(0.1)
         os._exit(0)
     def askexit(self):
         if mess.askokcancel("MhDown", "退出?"):self.exit()
