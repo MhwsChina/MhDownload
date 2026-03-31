@@ -1,12 +1,13 @@
 import requests as req#下载
 import threading as th#多线程
-import os,re,urllib,config,ui,shutil,extsrv,plugin
+import os,urllib,config,ui,shutil,extsrv,plugin
 from time import time
 from math import ceil
+from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v3'
-hd={'User-Agent': 'MhDown/'+".".join(re.findall(r"\d+",ver)),'Accept-Encoding': 'br'}
+ver='v4'
+hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
         self.pr,self.out,self.lk,self.threads={},printc,th.Lock(),[]
@@ -84,7 +85,7 @@ class mhdown:
             tmp=tmp.args[0]
         if 'MissingSchema'==exname:
             self.out('错误原因:网址前面漏加了http://或https://,程序将自动补全!')
-            url1=re.findall('meant .+',tmp)[0].replace('meant ','')[0:-1]
+            url1=findall('meant .+',tmp)[0].replace('meant ','')[0:-1]
             self.out('纠正后网址:',url1);return url1
         if 'getaddrinfo failed' in tmp or 'InvalidSchema'==exname or 'InvalidURL'==exname:
             self.out('错误原因:无法解析网址的服务器地址,网址无效!')
@@ -190,9 +191,9 @@ ui.thd.trace_add('write',updatev)
 ui.saveto.trace_add('write',updatev)
 ui.update.trace_add('write',updatev)
 th.Thread(target=worker,daemon=True).start()
-exts=extsrv.WebSocketServer('localhost',14431,mainui.addurlw)
+exts=extsrv.WebSocketServer(send=mainui.addurlw)
 extsrv.out=mainui.log
-exts.start()
+th.Thread(target=exts.start).start()
 if update:th.Thread(target=cupd,name='checkupdate').start()
 plugin.out=mainui.log
 sf=__import__('__main__');plugin.loadplugins(sf);plugin.loadplugins(sf,run=1)
