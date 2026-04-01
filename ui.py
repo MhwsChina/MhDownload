@@ -150,6 +150,7 @@ class UI:
         w.mainloop()
     def addurls(self,lll,stp):
         stp.destroy()
+        self.normal()
         dlList.insert('end',lll.get())
     def setsave(self):
         p=filedialog.askdirectory()
