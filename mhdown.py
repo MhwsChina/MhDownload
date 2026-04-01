@@ -6,7 +6,7 @@ from math import ceil
 from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v6'
+ver='v7'
 hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
@@ -160,15 +160,15 @@ def merge():
 def worker():
     global size,fn,prg
     while 1:
-        ui.sleep(2)
+        ui.sleep(2);ui.prog['mode']='determinate'
         if ui.dlList.curselection():sc=ui.dlList.curselection()[0]
         else:sc=0
         url=ui.dlList.get(sc)
         if not url:continue
         ui.dlList.delete(sc);ui.prog['mode']='indeterminate';ui.prog.start(100)
         ui.state.set('下载状态:获取文件信息')
-        try:url,hd=dl.redi(url);ui.prog.stop();ui.prog['mode']='determinate'
-        except:ui.state.set('下载状态:获取文件信息失败');ui.prog.stop();ui.prog['mode']='determinate';continue
+        try:url,hd=dl.redi(url);ui.prog.stop()
+        except:ui.state.set('下载状态:获取文件信息失败');ui.prog.stop();continue
         fn,size,acrange,prg=dl.fmfn(url,hd),int(hd.get('Content-Length',0)),hd.get('Accept-Ranges')=='bytes',1
         if not fn:fn=url.replace('/','')
         th.Thread(target=prog).start()
@@ -183,20 +183,26 @@ def worker():
                 else:ui.t.notify(f'{fs1}/{size}',f'{fn}\n下载完成!')
             else:ui.t.notify(f'OK',f'{fn}\n下载完成!')
         ui.state.set('下载状态:等待中');ui.state1.set('正在下载:无')
+        if isup:ui.mess.showinfo('MhDown','更新完成,请重启程序!');os._exit(0)
 def cupd():
-    url,size,fn=upd.getupdate(ver)
-    if not url:print('已是最新版本了!');return False
-    ui.t.notify('将自动下载','发现可用更新')
-    ui.dlList.insert('end',url)
+    global isup
+    url,size,fn=upd.getupdate(ver,_zip='.py' in ui.sys.argv[0])
+    if not url:mainui.log('已是最新版本了!');return False
+    if not '.py' in ui.sys.argv[0]:shutil.move(ui.sys.argv[0],'RemoveMe');isup=1;ui.t.notify('将自动下载','发现可用更新')
+    else:ui.mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包到保存位置!')
+    ui.dlList.insert(0,url)
+    return 1
+try:os.remove('RemoveMe')
+except:pass
 timeout,thread,saveto,update=config.getjs(('timeout',5),('thread',32),('saveto',''),('update',1))
-mainui,prg=ui.UI(ver,cupd),0
+mainui,isup=ui.UI(ver,cupd),0
 dl=mhdown(mainui.log)
 ui.timeout.set(timeout);ui.thd.set(thread);ui.saveto.set(saveto);ui.update.set(update)
 ui.timeout.trace_add('write',updatev)
 ui.thd.trace_add('write',updatev)
 ui.saveto.trace_add('write',updatev)
 ui.update.trace_add('write',updatev)
-th.Thread(target=worker,daemon=True).start()
+th.Thread(target=worker,daemon=True,name='worker').start()
 exts=extsrv.WebSocketServer(send=mainui.addurlw)
 extsrv.out=mainui.log
 th.Thread(target=exts.start).start()
