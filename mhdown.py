@@ -6,7 +6,7 @@ from math import ceil
 from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v5'
+ver='v6'
 hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
@@ -48,7 +48,7 @@ class mhdown:
                 rs=req.get(url,headers=headers,verify=False,stream=True,timeout=timeout)
                 with open(p,'wb') as f:
                     for c in rs.iter_content(chunk_size=chunk_size):
-                        if c:f.write(c);self.pr[p][1]=f.tell()
+                        if c:f.write(c);self.pr[p][0]=f.tell()
                 break
             except req.exceptions.StreamConsumedError:
                 try:
@@ -59,7 +59,7 @@ class mhdown:
     def thdl(self,url,fn,size,thread=32,headers=hd,timeout=10,chunk_size=524288,tmpfd='mhdtmp',saveto='',acrange=True):
         try:os.makedirs(tmpfd)
         except:pass
-        if not acrange:
+        if not acrange or thread<=1:
             self.dlnormal(url,fn,headers,timeout,chunk_size,saveto,size)
             return
         for s,e in self.qp(size,thread):
@@ -173,9 +173,15 @@ def worker():
         if not fn:fn=url.replace('/','')
         th.Thread(target=prog).start()
         dl.thdl(url,fn,size,thread,timeout=timeout,saveto=saveto,acrange=acrange);prg=0;ui.sleep(0.2)
-        if acrange:
+        if acrange and thread>1:
             ui.prog['maximum'],ui.prog['mode']=len(dl.pr),'determinate'
             ui.state.set('下载状态:合并文件');merge()
+        else:
+            if size:
+                fs1=list(dl.pr.values())[0][0]
+                if fs1!=size:ui.t.notify(f'{fs1}/{size}','{fn}\n下载不完整!');ui.mess.showwarning('MhDown','下载的文件不完整!')
+                else:ui.t.notify(f'{fs1}/{size}',f'{fn}\n下载完成!')
+            else:ui.t.notify(f'OK',f'{fn}\n下载完成!')
         ui.state.set('下载状态:等待中');ui.state1.set('正在下载:无')
 def cupd():
     url,size,fn=upd.getupdate(ver)

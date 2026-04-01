@@ -104,7 +104,7 @@ class UI:
         Label(fae,text='保存位置:').pack(side='left')
         saveto=tk.StringVar()
         Entry(fae,width=37,textvariable=saveto).pack(side='left')
-        Button(fae,text='选择',command=lambda:saveto.set(filedialog.askdirectory())).pack(side='left')
+        Button(fae,text='选择',command=self.setsave).pack(side='left')
         fae.grid(row=3,column=0,sticky='w')
         faf=tk.Frame(fa)
         Label(faf,text='下载进度:').pack(side='left')
@@ -148,23 +148,26 @@ class UI:
         self.t_th.start()
     def show(self):
         w.mainloop()
-    def addurls(self):
-        self.stp.destroy()
-        dlList.insert('end',self.tmpurl.get())
-    def showaddu(self):
-        self.stp=tk.Toplevel(w)
-        self.stp.title('添加下载任务')
-        self.stp.attributes('-topmost',1)
-        Entry(self.stp,textvariable=self.tmpurl,width=52).grid()
-        fae=tk.Frame(self.stp)
+    def addurls(self,lll,stp):
+        stp.destroy()
+        dlList.insert('end',lll.get())
+    def setsave(self):
+        p=filedialog.askdirectory()
+        if p:saveto.set(p)
+    def showaddu(self,url):
+        stp=tk.Toplevel(w)
+        stp.title('添加下载任务')
+        stp.attributes('-topmost',1)
+        lll=tk.StringVar();lll.set(url)
+        Entry(stp,textvariable=lll,width=52).grid()
+        fae=tk.Frame(stp)
         Label(fae,text='保存位置:').pack(side='left')
         Entry(fae,width=37,textvariable=saveto).pack(side='left')
-        Button(fae,text='选择',command=lambda:saveto.set(filedialog.askdirectory())).pack(side='left')
+        Button(fae,text='选择',command=self.setsave).pack(side='left')
         fae.grid(sticky='w')
-        Button(self.stp,text='添加下载任务',command=self.addurls,width=52).grid()
+        Button(stp,text='添加下载任务',command=lambda:self.addurls(lll,stp),width=52).grid()
     def addurlw(self,url):
-        self.tmpurl.set(url)
         self.log('接收到下载任务',url)
-        th.Thread(target=self.showaddu,name='stp').start()
+        th.Thread(target=lambda:self.showaddu(url),name='stp').start()
 #ui=UI('beta',lambda:0)
 #ui.show()
