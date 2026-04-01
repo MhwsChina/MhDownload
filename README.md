@@ -8,4 +8,4 @@ pip install pystray</br>
 python mhdown.py --hide</br>
 mhdown.exe --hide</br>
 浏览器插件须先打开本软件才有效</br>
-[点击前往下载浏览器插件](https://wwbxb.lanzouw.com/izUkj3lpehkb)</br>
+[点击前往下载浏览器插件,提取码:2026](https://wwbxb.lanzouw.com/b00yb0a5pc)</br>
