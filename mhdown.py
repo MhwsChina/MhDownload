@@ -6,7 +6,7 @@ from math import ceil
 from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v8'
+ver='v9'
 hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
@@ -67,6 +67,7 @@ class mhdown:
             dlth.start()
             self.threads.append(dlth)
         for dlth in self.threads:dlth.join()
+        self.pr={};self.threads.clear()
     def redi(self,url,headers=hd,timeout=10):
         while 1:
             try:rs=req.head(url,headers=headers,verify=False,timeout=timeout)
@@ -185,10 +186,11 @@ def worker():
         ui.state.set('下载状态:等待中');ui.state1.set('正在下载:无')
         if isup:ui.mess.showinfo('MhDown','更新完成,请重启程序!');os._exit(0)
 def cupd():
-    global isup
+    global isup,saveto
+    if dl.threads:ui.mess.showinfo('MhDown','还有下载任务未完毕!无法更新!')
     url,size,fn=upd.getupdate(ver,_zip='.py' in ui.sys.argv[0])
     if not url:mainui.log('已是最新版本了!');return False
-    if not '.py' in ui.sys.argv[0]:shutil.move(ui.sys.argv[0],'RemoveMe');isup=1;ui.t.notify('将自动下载','发现可用更新')
+    if not '.py' in ui.sys.argv[0]:shutil.move(ui.sys.argv[0],'RemoveMe');isup,saveto=1,'';ui.t.notify('将自动下载','发现可用更新')
     else:ui.mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包到保存位置!')
     ui.dlList.insert(0,url)
     return 1
@@ -206,7 +208,7 @@ th.Thread(target=worker,daemon=True,name='worker').start()
 exts=extsrv.WebSocketServer(send=mainui.addurlw)
 extsrv.out=mainui.log
 th.Thread(target=exts.start).start()
-if update:th.Thread(target=cupd,name='checkupdate').start()
+if update==1:th.Thread(target=cupd,name='checkupdate').start()
 plugin.out=mainui.log
 sf=__import__('__main__');plugin.loadplugins(sf);plugin.loadplugins(sf,run=1)
 mainui.show()
