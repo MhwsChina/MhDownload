@@ -6,7 +6,7 @@ from math import ceil
 from re import findall
 import update as upd
 req.urllib3.disable_warnings()
-ver='v9'
+ver='v10'
 hd={'User-Agent': 'MhDown/'+".".join(findall(r"\d+",ver)),'Accept-Encoding': 'br'}
 class mhdown:
     def __init__(self,printc=print):
@@ -36,6 +36,7 @@ class mhdown:
             self.lk.acquire()
             if v[0]>=v[2]-v[1]+1 or v[4] or f in self.pr[p][4] or v[0]/(v[2]-v[1]+1)>=0.95:self.lk.release();continue
             t,sb,eb=v[0:3];bz=(eb-sb+1-t)//2
+            if bz<=chunk_size:self.lk.release();return
             self.pr[f][3],ns=t+bz,sb+t+bz;self.pr[p][4].append(f)
             self.lk.release()
             self.out(f'{sb} {t+bz-1} {ns} {eb}')
@@ -59,6 +60,7 @@ class mhdown:
     def thdl(self,url,fn,size,thread=32,headers=hd,timeout=10,chunk_size=524288,tmpfd='mhdtmp',saveto='',acrange=True):
         try:os.makedirs(tmpfd)
         except:pass
+        self.pr={};self.threads.clear()
         if not acrange or thread<=1:
             self.dlnormal(url,fn,headers,timeout,chunk_size,saveto,size)
             return
@@ -67,7 +69,6 @@ class mhdown:
             dlth.start()
             self.threads.append(dlth)
         for dlth in self.threads:dlth.join()
-        self.pr={};self.threads.clear()
     def redi(self,url,headers=hd,timeout=10):
         while 1:
             try:rs=req.head(url,headers=headers,verify=False,timeout=timeout)
@@ -106,6 +107,8 @@ class mhdown:
             save1=save1[0].replace('filename*=','').replace('UTF-8\'\'','').replace('"','').replace(';','').replace('filename=','')
         else:save1=os.path.basename(url.split('/')[-1]).split('?')[0]
         return urllib.parse.unquote(save1)#解码文件名，比如有些时候文件名为"a%20b.c"，解码为"a b.c"
+    def clear(self):
+        self.pr={};self.threads.clear()
 def updatev(*a):
     global timeout,thread,saveto,update
     try:timeout,thread,saveto,update=ui.timeout.get(),ui.thd.get(),ui.saveto.get(),ui.update.get()
@@ -161,7 +164,7 @@ def merge():
 def worker():
     global size,fn,prg
     while 1:
-        ui.sleep(2);ui.prog['mode']='determinate'
+        ui.sleep(2);ui.prog['mode']='determinate';dl.clear()
         if ui.dlList.curselection():sc=ui.dlList.curselection()[0]
         else:sc=0
         url=ui.dlList.get(sc)
@@ -190,9 +193,8 @@ def cupd():
     if dl.threads:ui.mess.showinfo('MhDown','还有下载任务未完毕!无法更新!')
     url,size,fn=upd.getupdate(ver,_zip='.py' in ui.sys.argv[0])
     if not url:mainui.log('已是最新版本了!');return False
-    if not '.py' in ui.sys.argv[0]:shutil.move(ui.sys.argv[0],'RemoveMe');isup,saveto=1,'';ui.t.notify('将自动下载','发现可用更新')
-    else:ui.mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包到保存位置!')
-    ui.dlList.insert(0,url)
+    if not '.py' in ui.sys.argv[0]:shutil.move(ui.sys.argv[0],'RemoveMe');isup,saveto=1,'';ui.t.notify('将自动下载','发现可用更新');ui.dlList.insert(0,url)
+    else:ui.mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');mainui.addurlw(url)
     return 1
 try:os.remove('RemoveMe')
 except:pass
